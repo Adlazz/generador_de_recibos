@@ -1,0 +1,35 @@
+[
+  {
+    "numero_recibo": 1,
+    "fecha": "31/03/2026",
+    "nombre_pagador": "Tania Torres",
+    "concepto": "Honorarios Mes Abril 2026",
+    "monto": 30000.0,
+    "metodo_pago": "Otro",
+    "nombre_receptor": "Adrian Lazzarini",
+    "hash_seguridad": "0988a4dec1238828557bfee7889f7a9df5d3cedb0cb90180ecd518df55e1c26d",
+    "fecha_generacion": "2026-03-31 19:48:16"
+  },
+  {
+    "numero_recibo": 2,
+    "fecha": "31/03/2026",
+    "nombre_pagador": "Hernan Lopez",
+    "concepto": "Honorarios Mes Abril 2026",
+    "monto": 30000.0,
+    "metodo_pago": "Efectivo",
+    "nombre_receptor": "Adrian Lazzarini",
+    "hash_seguridad": "dffb0226a141a35bf51b994e29ec3402de88e0919e64bd803bd155abdeae2a97",
+    "fecha_generacion": "2026-03-31 19:58:01"
+  },
+  {
+    "numero_recibo": 3,
+    "fecha": "31/03/2026",
+    "nombre_pagador": "Pedro",
+    "concepto": "Honorarios Mes Abril 2026",
+    "monto": 15000.0,
+    "metodo_pago": "Efectivo",
+    "nombre_receptor": "Adrian",
+    "hash_seguridad": "703afb7d13197c2a773836bb7be5cfbc5ded740e9fa5f97f0a51b99a9e2330bb",
+    "fecha_generacion": "2026-03-31 20:03:34"
+  }
+]
