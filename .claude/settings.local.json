@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add secrets_example.toml)",
+      "Bash(git commit -m \"Add example secrets configuration with real password hash\")",
+      "Bash(git push origin main)",
+      "Bash(git add PASOS_DEPLOYMENT.md)",
+      "Bash(git commit -m \"Add quick deployment steps guide\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
