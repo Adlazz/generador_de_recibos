@@ -23,6 +23,7 @@ ENV/
 
 # Streamlit
 .streamlit/secrets.toml
+MY_SECRETS.toml
 
 # Generated files
 data/recibos_*.pdf
