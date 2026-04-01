@@ -1,5 +1,5 @@
-streamlit==1.31.1
-reportlab==4.1.0
-qrcode[pil]==7.4.2
-num2words==0.5.13
-Pillow==10.2.0
+streamlit>=1.40.0
+reportlab>=4.2.5
+qrcode[pil]>=8.0
+num2words>=0.5.13
+Pillow>=10.4.0
