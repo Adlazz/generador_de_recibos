@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from utils.qr_generator import generar_qr
 from utils.pdf_generator import generar_pdf_recibo
+import streamlit_authenticator as stauth
 
 
 # Configuración de la página
@@ -14,9 +15,39 @@ st.set_page_config(
 )
 
 
-def cargar_recibos():
-    """Carga el historial de recibos desde el archivo JSON"""
-    archivo_recibos = 'data/recibos.json'
+# ============================================================================
+# SISTEMA DE AUTENTICACIÓN
+# ============================================================================
+
+def inicializar_autenticacion():
+    """Inicializa el sistema de autenticación usando streamlit-authenticator"""
+    # Cargar credenciales desde secrets
+    try:
+        credentials = st.secrets["credentials"]
+        cookie = st.secrets["cookie"]
+
+        authenticator = stauth.Authenticate(
+            credentials=credentials.to_dict(),
+            cookie_name=cookie["name"],
+            cookie_key=cookie["key"],
+            cookie_expiry_days=cookie["expiry_days"]
+        )
+        return authenticator
+    except Exception as e:
+        st.error(f"Error al cargar la configuración de autenticación: {str(e)}")
+        st.info("Asegúrate de que el archivo .streamlit/secrets.toml esté configurado correctamente")
+        st.stop()
+        return None
+
+
+def cargar_recibos(username=None):
+    """Carga el historial de recibos desde el archivo JSON del usuario"""
+    # Si no hay usuario autenticado, usar archivo global (retrocompatibilidad)
+    if username:
+        archivo_recibos = f'data/recibos_{username}.json'
+    else:
+        archivo_recibos = 'data/recibos.json'
+
     if os.path.exists(archivo_recibos):
         try:
             with open(archivo_recibos, 'r', encoding='utf-8') as f:
@@ -26,28 +57,62 @@ def cargar_recibos():
     return []
 
 
-def guardar_recibo(datos_recibo):
-    """Guarda un nuevo recibo en el archivo JSON"""
-    archivo_recibos = 'data/recibos.json'
+def guardar_recibo(datos_recibo, username=None):
+    """Guarda un nuevo recibo en el archivo JSON del usuario"""
     os.makedirs('data', exist_ok=True)
 
-    recibos = cargar_recibos()
+    # Si no hay usuario autenticado, usar archivo global (retrocompatibilidad)
+    if username:
+        archivo_recibos = f'data/recibos_{username}.json'
+    else:
+        archivo_recibos = 'data/recibos.json'
+
+    recibos = cargar_recibos(username)
     recibos.append(datos_recibo)
 
     with open(archivo_recibos, 'w', encoding='utf-8') as f:
         json.dump(recibos, f, ensure_ascii=False, indent=2)
 
 
-def obtener_siguiente_numero():
-    """Obtiene el siguiente número de recibo disponible"""
-    recibos = cargar_recibos()
+def obtener_siguiente_numero(username=None):
+    """Obtiene el siguiente número de recibo disponible para el usuario"""
+    recibos = cargar_recibos(username)
     if recibos:
         return max([r.get('numero_recibo', 0) for r in recibos]) + 1
     return 1
 
 
+# ============================================================================
 # INTERFAZ PRINCIPAL
+# ============================================================================
+
+# Inicializar autenticación
+authenticator = inicializar_autenticacion()
+
+# Mostrar login
+name, authentication_status, username = authenticator.login("Iniciar Sesión", "main")
+
+# Verificar estado de autenticación
+if authentication_status == False:
+    st.error("❌ Usuario o contraseña incorrectos")
+    st.stop()
+elif authentication_status == None:
+    st.warning("👋 Por favor ingresa tu usuario y contraseña")
+    st.info("💡 Si no tienes una cuenta, contacta al administrador del sistema")
+    st.stop()
+
+# Usuario autenticado exitosamente
 st.title("📄 Generador de Recibos")
+
+# Sidebar con información del usuario
+with st.sidebar:
+    st.write(f"👤 **Bienvenido/a:** {name}")
+    st.write(f"🔑 **Usuario:** {username}")
+    st.markdown("---")
+
+    # Botón de logout
+    authenticator.logout("🚪 Cerrar Sesión", "sidebar")
+
 st.markdown("---")
 
 # Tabs para organizar la interfaz
@@ -60,7 +125,7 @@ with tab1:
     numero_recibo = st.number_input(
         "Número de Recibo",
         min_value=1,
-        value=obtener_siguiente_numero(),
+        value=obtener_siguiente_numero(username),
         step=1,
         help="Número correlativo del recibo"
     )
@@ -164,8 +229,8 @@ with tab1:
                     nombre_archivo = f"recibo_{numero_recibo:04d}_{fecha.strftime('%Y%m%d')}.pdf"
                     ruta_pdf = generar_pdf_recibo(datos_recibo, qr_buffer, nombre_archivo)
 
-                    # Guardar en base de datos JSON
-                    guardar_recibo(datos_recibo)
+                    # Guardar en base de datos JSON del usuario
+                    guardar_recibo(datos_recibo, username)
 
                     # Mostrar éxito
                     st.success(f"✅ Recibo #{numero_recibo:04d} generado exitosamente!")
@@ -191,7 +256,7 @@ with tab1:
 with tab2:
     st.subheader("Historial de Recibos")
 
-    recibos = cargar_recibos()
+    recibos = cargar_recibos(username)
 
     if recibos:
         # Ordenar por número de recibo descendente

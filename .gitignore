@@ -26,6 +26,7 @@ ENV/
 
 # Generated files
 data/recibos_*.pdf
+data/recibos_*.json
 *.pdf
 
 # OS

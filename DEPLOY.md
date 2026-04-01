@@ -48,9 +48,56 @@ git push -u origin main
    - **Repository:** `tu-usuario/generador_de_recibos`
    - **Branch:** `main`
    - **Main file path:** `app.py`
-5. Haz clic en **"Deploy!"**
+5. **NO hagas clic en Deploy todavía** - primero configura los Secrets
 
-### Paso 3: Configuración de Persistencia de Datos
+### Paso 3: Configurar Secrets (Autenticación) 🔐
+
+⚠️ **IMPORTANTE:** La aplicación ahora tiene sistema de autenticación. Debes configurar los usuarios ANTES de hacer deploy.
+
+1. **En la página de configuración de tu app**, ve a **"Advanced settings"** → **"Secrets"**
+
+2. **Copia y pega el siguiente contenido**, modificando los usuarios y contraseñas:
+
+```toml
+[credentials]
+
+[credentials.usernames.admin]
+email = "admin@ejemplo.com"
+name = "Administrador"
+password = "$2b$12$KIXxnF7nF7nF7nF7nF7nF.zQYj9h9h9h9h9h9h9h9h9h9h9h9h"
+
+# Agrega más usuarios aquí si es necesario
+# [credentials.usernames.usuario1]
+# email = "usuario1@ejemplo.com"
+# name = "Usuario Uno"
+# password = "$2b$12$HASH_GENERADO_AQUI"
+
+[cookie]
+name = "generador_recibos_auth"
+key = "random_signature_key_123456789"
+expiry_days = 30
+```
+
+3. **Para generar contraseñas hasheadas:**
+
+   **Opción A - Usando el script incluido (Recomendado):**
+   ```bash
+   # En tu computadora local
+   pip install streamlit-authenticator bcrypt
+   python generate_password.py
+   ```
+
+   **Opción B - Online:**
+   - Usa [bcrypt-generator.com](https://bcrypt-generator.com/)
+   - Ingresa la contraseña
+   - Copia el hash generado
+   - Pégalo en el campo `password`
+
+4. **Guarda los Secrets** haciendo clic en "Save"
+
+5. **Ahora sí, haz clic en "Deploy!"**
+
+### Paso 4: Configuración de Persistencia de Datos
 
 ⚠️ **Importante:** Streamlit Cloud reinicia la aplicación periódicamente, lo que puede causar pérdida de datos del archivo `data/recibos.json`.
 
@@ -534,6 +581,54 @@ st.set_page_config(
 
 ---
 
+## 👥 Gestión de Usuarios
+
+### Agregar un Nuevo Usuario
+
+#### En Streamlit Cloud:
+
+1. **Genera el hash de la contraseña:**
+   ```bash
+   python generate_password.py
+   ```
+
+2. **Ve a tu app en Streamlit Cloud** → **Settings** → **Secrets**
+
+3. **Agrega el nuevo usuario** en la sección `[credentials.usernames]`:
+   ```toml
+   [credentials.usernames.nuevo_usuario]
+   email = "nuevo@ejemplo.com"
+   name = "Nuevo Usuario"
+   password = "$2b$12$HASH_GENERADO"
+   ```
+
+4. **Guarda los cambios** - la app se reiniciará automáticamente
+
+#### En Local:
+
+1. Ejecuta `python generate_password.py`
+2. Copia el output al archivo `.streamlit/secrets.toml`
+3. Guarda y reinicia la app
+
+### Cambiar Contraseña de un Usuario
+
+1. Genera un nuevo hash con `python generate_password.py`
+2. Reemplaza el valor del campo `password` del usuario
+3. Guarda los cambios
+
+### Eliminar un Usuario
+
+1. Borra la sección completa del usuario en `secrets.toml`
+2. Guarda los cambios
+
+### Usuarios por Defecto
+
+El archivo `.streamlit/secrets.toml` incluye contraseñas de ejemplo que **DEBES CAMBIAR** antes de usar en producción.
+
+⚠️ **Seguridad:** Los hashes en el archivo `secrets.toml` son solo ejemplos y no funcionan. Debes generar tus propios hashes reales.
+
+---
+
 ## 📞 Solución de Problemas
 
 ### Error: "Port already in use"
@@ -564,6 +659,31 @@ Verifica permisos del directorio `data/`:
 ```bash
 sudo chown -R www-data:www-data /var/www/generador-recibos/data
 sudo chmod -R 755 /var/www/generador-recibos/data
+```
+
+### Error: "Error al cargar la configuración de autenticación"
+**Causa:** El archivo `secrets.toml` no está configurado o tiene errores de sintaxis.
+
+**Solución:**
+1. Verifica que exista `.streamlit/secrets.toml` (local) o esté configurado en Streamlit Cloud
+2. Verifica la sintaxis TOML (usa [toml-lint](https://www.toml-lint.com/))
+3. Asegúrate de que tenga las secciones `[credentials]` y `[cookie]`
+
+### Error: "Usuario o contraseña incorrectos" (siempre)
+**Causa:** Los hashes de contraseña no son válidos.
+
+**Solución:**
+1. Los hashes de ejemplo en `secrets.toml` NO funcionan
+2. Debes generar hashes reales con `python generate_password.py`
+3. Copia los hashes generados al archivo `secrets.toml`
+
+### No puedo ver mis recibos antiguos después de implementar autenticación
+**Causa:** Los recibos antiguos están en `data/recibos.json` pero la app ahora usa `data/recibos_username.json`
+
+**Solución:**
+```bash
+# Copia los recibos antiguos al archivo del usuario
+cp data/recibos.json data/recibos_tuusername.json
 ```
 
 ---
